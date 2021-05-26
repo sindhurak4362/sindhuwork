@@ -1,0 +1,21 @@
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+$headers,$authHeader =$null
+$hea = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$hea.Add("Accept-Encoding", "base64")
+$body = '3z5z8gz2a5qc4k1bv00pb3660t5w2nkk69523yn76332twm513egvcsn'
+
+$response = Invoke-RestMethod 'Https://localhost:8443/authn/myConjurAccount/admin/authenticate' -Method 'POST' -Body $body -Headers $hea
+$authHeader = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$authHeader.Add("Authorization", "Token token=`"$response`"")
+$authHeader.Add("Content-Type", "application/x-www-form-urlencoded")
+$date = Get-Date
+$tokendate=($date.AddMinutes(10)).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss+00:00")
+
+$body = "expiration="+ ($tokendate.Replace(':','%3A')).Replace('+','%2B') +"&host_factory=myConjurAccount%3Ahost%3ABotApp%2FmyDemoApp"
+
+$hosttoken = Invoke-RestMethod 'https://localhost:8443/host_factory_tokens' -Method 'POST' -Headers $authHeader -Body $body
+$token = $hosttoken.token
+$hosheader =  New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$hosheader.Add("Authorization", "Token token=`"$token`"")
+$hosheader.Add("Content-Type", "application/x-www-form-urlencoded")
+$response2 = Invoke-RestMethod 'https://localhost:8443/host_factories/hosts' -Method 'POST' -Headers $hosheader -Body "id=brand-new-host"
